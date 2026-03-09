@@ -68,6 +68,7 @@ pub enum Commands {
     CircResolve(CircResolveArgs),
     CircBind(CircBindArgs),
     CircRelease(CircReleaseArgs),
+    #[clap(visible_alias = "circ-ls")]
     CircList(CircListArgs),
 }
 
