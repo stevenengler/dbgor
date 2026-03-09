@@ -63,6 +63,10 @@ dbgor circ-info c1
 # Resolve hostname "torproject.org" by the last hop of circuit "c1".
 dbgor circ-resolve c1 torproject.org
 
+# Make an HTTP request to example.com over circuit "c1".
+dbgor circ-bind c1 127.0.0.1:9070 example.com 80
+curl --header 'Host: example.com' 127.0.0.1:9070
+
 # Release circuit "c1".
 dbgor circ-release c1
 

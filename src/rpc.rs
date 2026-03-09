@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::future::Future;
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
 
@@ -27,6 +27,7 @@ pub trait Rpc {
     async fn circ_extend(args: cli::CircExtendArgs) -> Result<(), RequestError>;
     async fn circ_info(args: cli::CircInfoArgs) -> Result<CircInfo, RequestError>;
     async fn circ_resolve(args: cli::CircResolveArgs) -> Result<Vec<IpAddr>, RequestError>;
+    async fn circ_bind(args: cli::CircBindArgs) -> Result<SocketAddr, RequestError>;
     async fn circ_release(args: cli::CircReleaseArgs) -> Result<(), RequestError>;
     async fn circ_list(
         args: cli::CircListArgs,

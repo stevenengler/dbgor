@@ -4,7 +4,7 @@ mod rpc;
 mod util;
 
 use std::collections::HashMap;
-use std::net::IpAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -13,6 +13,7 @@ use arti_client::TorClient;
 use clap::Parser;
 use futures_util::StreamExt;
 use tarpc::context::Context;
+use tokio::net::TcpListener;
 use tor_linkspec::{ChanTarget, HasRelayIds, OwnedCircTarget, RelayIdType};
 use tor_proto::ClientTunnel;
 use tor_rtcompat::tokio::PreferredRuntime;
@@ -113,6 +114,17 @@ async fn main() -> anyhow::Result<()> {
 
             let ips = serde_json::to_string_pretty(&ips)?;
             println!("{ips}");
+        }
+        cli::Commands::CircBind(args) => {
+            let client = rpc::client_connect().await?;
+            let ctx = context_with_timeout(Duration::from_secs(60));
+
+            let addr = client
+                .circ_bind(ctx, args.clone())
+                .await?
+                .map_err(anyhow::Error::msg)?;
+
+            println!("{addr}");
         }
         cli::Commands::CircRelease(args) => {
             let client = rpc::client_connect().await?;
@@ -315,6 +327,73 @@ impl Rpc for Server {
         let tunnel = tunnel.lock().await;
 
         Ok(tunnel.resolve(&args.hostname).await?)
+    }
+
+    async fn circ_bind(
+        self,
+        _: Context,
+        args: crate::cli::CircBindArgs,
+    ) -> Result<SocketAddr, rpc::RequestError> {
+        let listener = TcpListener::bind(&args.addr).await?;
+        let local_addr = listener.local_addr().unwrap();
+
+        let tunnel = self
+            .state
+            .lock()
+            .unwrap()
+            .circuits
+            .get(&args.circ)
+            .ok_or_else(|| anyhow::anyhow!("Not a valid circuit"))?
+            .clone();
+
+        // We don't want to hold the lock while the listener is waiting for connections,
+        // since it would prevent us from performing other operations on the circuit.
+        // We clone the inner `Arc` here which means that if the circuit is "released",
+        // the circuit will remain open while the below loop is running.
+        let tunnel = tunnel.lock().await;
+        let tunnel = Arc::clone(&tunnel);
+
+        tokio::spawn(async move {
+            // TODO: Add a way to stop this loop.
+            loop {
+                let (mut socket, _) = match listener.accept().await {
+                    Ok(x) => x,
+                    Err(e) => {
+                        tracing::warn!("Could not accept incoming socket at {local_addr}: {e}");
+                        break;
+                    }
+                };
+
+                let tunnel = Arc::clone(&tunnel);
+                let dest = (args.dest_addr.clone(), args.dest_port);
+
+                tokio::spawn(async move {
+                    let mut stream = match tunnel.begin_stream(&dest.0, dest.1, None).await {
+                        Ok(x) => x,
+                        Err(e) => {
+                            tracing::warn!(
+                                "Could not create a stream to '{}:{}': {e}",
+                                dest.0,
+                                dest.1,
+                            );
+                            return;
+                        }
+                    };
+
+                    loop {
+                        if let Err(e) =
+                            tokio::io::copy_bidirectional(&mut socket, &mut stream).await
+                        {
+                            // This will happen normally when the socket or stream closes.
+                            tracing::debug!("Copy failed: {e}");
+                            break;
+                        }
+                    }
+                });
+            }
+        });
+
+        Ok(local_addr)
     }
 
     async fn circ_release(
