@@ -2,6 +2,11 @@
 name = "dbgor"
 version = "0.1.0"
 edition = "2024"
+license = "GPL-3.0"
+repository = "https://github.com/stevenengler/dbgor"
+description = "An interactive tool to help with debugging connectivity issues on the Tor network."
+keywords = ["tor", "arti"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.102"

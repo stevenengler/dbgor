@@ -14,13 +14,21 @@ but this is a personal project and is not actively maintained.
 
 You must have a recent [rust/cargo][rust] toolchain installed.
 
+This is published to [crates.io][crates-io] mainly to prevent a malicious package
+from masquerading as this one while using the same name.
+It's recommended to build or install from the latest development version instead.
+
 ```bash
+# install the latest release from crates.io
+cargo install dbgor
+
 # install the latest development version
 git clone https://github.com/stevenengler/dbgor.git
 cargo install --path dbgor
 ```
 
 [rust]: https://www.rust-lang.org/tools/install
+[crates-io]: https://crates.io/
 
 ### Examples
 
