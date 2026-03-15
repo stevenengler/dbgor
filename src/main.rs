@@ -353,10 +353,10 @@ impl Rpc for Server {
         let tunnel = tunnel.lock().await;
         let tunnel = Arc::clone(&tunnel);
 
-        tokio::spawn(async move {
+        tokio::spawn(warn_on_error(async move {
             let dest = (args.dest_addr, args.dest_port);
-            circ_bind_loop(listener, tunnel, dest).await;
-        });
+            circ_bind_loop(listener, tunnel, dest).await
+        }));
 
         Ok(local_addr)
     }
@@ -418,31 +418,29 @@ impl Rpc for Server {
     }
 }
 
-async fn circ_bind_loop(listener: TcpListener, tunnel: Arc<ClientTunnel>, dest: (String, u16)) {
+async fn circ_bind_loop(
+    listener: TcpListener,
+    tunnel: Arc<ClientTunnel>,
+    dest: (String, u16),
+) -> anyhow::Result<()> {
     // For log messages.
     let local_addr = listener.local_addr().unwrap();
 
     // TODO: Add a way to stop this loop.
     loop {
-        let (mut socket, _) = match listener.accept().await {
-            Ok(x) => x,
-            Err(e) => {
-                tracing::warn!("Could not accept incoming socket at {local_addr}: {e}");
-                break;
-            }
-        };
+        let (mut socket, _) = listener
+            .accept()
+            .await
+            .with_context(|| format!("Could not accept incoming socket at {local_addr}"))?;
 
         let tunnel = Arc::clone(&tunnel);
         let dest = dest.clone();
 
-        tokio::spawn(async move {
-            let mut stream = match tunnel.begin_stream(&dest.0, dest.1, None).await {
-                Ok(x) => x,
-                Err(e) => {
-                    tracing::warn!("Could not create a stream to '{}:{}': {e}", dest.0, dest.1);
-                    return;
-                }
-            };
+        tokio::spawn(warn_on_error(async move {
+            let mut stream = tunnel
+                .begin_stream(&dest.0, dest.1, None)
+                .await
+                .with_context(|| format!("Could not create a stream to '{}:{}'", dest.0, dest.1))?;
 
             loop {
                 if let Err(e) = tokio::io::copy_bidirectional(&mut socket, &mut stream).await {
@@ -451,6 +449,15 @@ async fn circ_bind_loop(listener: TcpListener, tunnel: Arc<ClientTunnel>, dest: 
                     break;
                 }
             }
-        });
+
+            Ok(())
+        }));
+    }
+}
+
+/// Log any error as a warning.
+async fn warn_on_error(f: impl Future<Output = anyhow::Result<()>>) {
+    if let Err(e) = f.await {
+        tracing::warn!("{e}");
     }
 }
