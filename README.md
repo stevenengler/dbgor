@@ -73,8 +73,11 @@ dbgor circ-resolve c1 torproject.org
 dbgor circ-bind c1 127.0.0.1:9070 example.com 80
 curl --header 'Host: example.com' 127.0.0.1:9070 | less
 
-# Release circuit "c1".
+# Release circuit "c1". The circuit will close once it's no longer being used.
 dbgor circ-release c1
+
+# Release circuit "c1" and terminate it. Active streams or commands using it will likely fail.
+dbgor circ-release --close c1
 
 # List all circuits.
 dbgor circ-list

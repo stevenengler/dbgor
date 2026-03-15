@@ -401,12 +401,21 @@ impl Rpc for Server {
         _: Context,
         args: crate::cli::CircReleaseArgs,
     ) -> Result<(), rpc::RequestError> {
-        self.state
+        let tunnel = self
+            .state
             .lock()
             .unwrap()
             .circuits
             .remove(&args.circ)
             .ok_or_else(|| anyhow::anyhow!("Not a valid circuit"))?;
+
+        if args.close {
+            let tunnel = tunnel.lock().await;
+            tunnel.terminate();
+            tracing::debug!("Waiting for circuit {} to close", args.circ);
+            tunnel.wait_for_close().await;
+        }
+
         Ok(())
     }
 

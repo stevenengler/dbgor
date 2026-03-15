@@ -215,11 +215,21 @@ const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
 pub struct CircReleaseArgs {
     /// The ID of the circuit to release (ex: "c3").
     pub circ: CircIdRef,
+    /// Force close the circuit.
+    ///
+    /// This will close the circuit and terminate all streams using it.
+    /// Any other active uses of this circuit,
+    /// such as other running commands, will likely fail.
+    #[arg(long)]
+    pub close: bool,
 }
 
 const CIRC_RELEASE_EXAMPLES: &str = formatcp! {r#"
-  # Release circuit "c1".
+  # Release circuit "c1". The circuit will close once it's no longer being used.
   {APP_NAME} {BOLD}circ-release{RST} c1
+
+  # Release circuit "c1" and terminate it. Active streams or commands using it will likely fail.
+  {APP_NAME} {BOLD}circ-release{RST} --close c1
 "#};
 
 /// List all circuits.
