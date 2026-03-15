@@ -35,7 +35,7 @@ pub trait Rpc {
 }
 
 pub async fn client_connect() -> anyhow::Result<RpcClient> {
-    let bind_path = bind_path("circ-util");
+    let bind_path = bind_path("dbgor");
     let mut transport = tarpc::serde_transport::unix::connect(bind_path, Json::default);
     transport.config_mut().max_frame_length(usize::MAX);
 
@@ -49,7 +49,7 @@ where
     F: Future<Output = anyhow::Result<Server>> + Send,
 {
     // TODO: Fix permissions race (set permissions before binding).
-    let bind_path = bind_path("circ-util");
+    let bind_path = bind_path("dbgor");
     let listener =
         tokio::net::UnixListener::bind(&bind_path).context("Failed to bind unix socket")?;
 
