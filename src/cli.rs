@@ -103,11 +103,12 @@ const CIRC_NEW_EXAMPLES: &str = formatcp! {r#"
   # Build a circuit to the relay with the given RSA identity.
   {APP_NAME} {BOLD}circ-new{RST} rsa:4EBB385C80A2CA5D671E16F1C722FBFB5F176891
 
-  # Build a "RELAY_FAST" circuit to a relay which might not be in the consensus.
+  # Build a "CREATE_FAST" circuit to a relay which might not be in the consensus.
   {APP_NAME} {BOLD}circ-new{RST} fast:192.0.2.20:443,rsa:0A9B1B207FD13A6F117F95CAFA358EEE2234F19A
 
   # Build an "ntor" circuit to a relay which might not be in the consensus.
-  {APP_NAME} {BOLD}circ-new{RST} complete:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
+  {APP_NAME} {BOLD}circ-new{RST} \
+    complete:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
 "#};
 
 /// Extend a circuit.
@@ -197,9 +198,9 @@ pub struct CircBindArgs {
 }
 
 const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
-  # Make an HTTP request to example.com over circuit "c1".
+  # Make an HTTP request to "example.com" over circuit "c1".
   {APP_NAME} {BOLD}circ-bind{RST} c1 127.0.0.1:9070 example.com 80
-  curl --header 'Host: example.com' 127.0.0.1:9070
+  curl --header 'Host: example.com' 127.0.0.1:9070 | less
 "#};
 
 /// Release an existing circuit.
