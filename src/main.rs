@@ -465,18 +465,27 @@ async fn circ_bind_loop(
     tunnel: Arc<ClientTunnel>,
     dest: StreamType,
 ) -> anyhow::Result<()> {
+    let mut tunnel_close = tunnel.wait_for_close();
+
+    // Don't want to keep the tunnel open while listening.
+    let tunnel_weak = Arc::downgrade(&tunnel);
+    drop(tunnel);
+
     // For log messages.
     let local_addr = listener.local_addr().unwrap();
 
-    // TODO: Add a way to stop this loop.
     loop {
-        let (mut socket, _) = listener
-            .accept()
-            .await
-            .with_context(|| format!("Could not accept incoming socket at {local_addr}"))?;
+        let (mut socket, _) = tokio::select! {
+            biased;
+            _ = &mut tunnel_close => break Ok(()),
+            res = listener.accept() => res
+               .with_context(|| format!("Could not accept incoming socket at {local_addr}"))?,
+        };
 
-        let tunnel = Arc::clone(&tunnel);
         let dest = dest.clone();
+        let Some(tunnel) = tunnel_weak.upgrade() else {
+            break Ok(());
+        };
 
         tokio::spawn(warn_on_error(async move {
             let mut stream = match dest {

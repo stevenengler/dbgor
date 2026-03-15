@@ -187,6 +187,8 @@ const CIRC_RESOLVE_EXAMPLES: &str = formatcp! {r#"
 /// This is useful when you provide an address with a port of 0.
 ///
 /// This command can be useful when an application does not support SOCKS or HTTP proxies.
+///
+/// The socket will stop listening when the circuit is closed.
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
 #[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_BIND_EXAMPLES}"))]
 pub struct CircBindArgs {
@@ -217,6 +219,8 @@ const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
 /// This is useful when you provide an address with a port of 0.
 ///
 /// This command can be useful when an application does not support SOCKS or HTTP proxies.
+///
+/// The socket will stop listening when the circuit is closed.
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
 #[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_BIND_DIR_EXAMPLES}"))]
 pub struct CircBindDirArgs {
@@ -235,7 +239,7 @@ const CIRC_BIND_DIR_EXAMPLES: &str = formatcp! {r#"
 /// Release an existing circuit.
 ///
 /// This will destroy the circuit, unless it has already closed. If it is being used by another
-/// request, it will be closed after the request has completed.
+/// request or a data stream, it will be closed after the request or stream has completed.
 ///
 /// The circuit ID must be the value given by a previous `circ-new` command.
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
