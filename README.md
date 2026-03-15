@@ -73,6 +73,10 @@ dbgor circ-resolve c1 torproject.org
 dbgor circ-bind c1 127.0.0.1:9070 example.com 80
 curl --header 'Host: example.com' 127.0.0.1:9070 | less
 
+# Download the latest consensus over circuit "c1".
+dbgor circ-bind-dir c1 127.0.0.1:9070
+curl 127.0.0.1:9070/tor/status-vote/current/consensus | less
+
 # Release circuit "c1". The circuit will close once it's no longer being used.
 dbgor circ-release c1
 

@@ -126,6 +126,17 @@ async fn main() -> anyhow::Result<()> {
 
             println!("{addr}");
         }
+        cli::Commands::CircBindDir(args) => {
+            let client = rpc::client_connect().await?;
+            let ctx = context_with_timeout(Duration::from_secs(60));
+
+            let addr = client
+                .circ_bind_dir(ctx, args.clone())
+                .await?
+                .map_err(anyhow::Error::msg)?;
+
+            println!("{addr}");
+        }
         cli::Commands::CircRelease(args) => {
             let client = rpc::client_connect().await?;
             let ctx = context_with_timeout(Duration::from_secs(2));
@@ -361,6 +372,37 @@ impl Rpc for Server {
         Ok(local_addr)
     }
 
+    async fn circ_bind_dir(
+        self,
+        _: Context,
+        args: crate::cli::CircBindDirArgs,
+    ) -> Result<SocketAddr, rpc::RequestError> {
+        let listener = TcpListener::bind(&args.addr).await?;
+        let local_addr = listener.local_addr().unwrap();
+
+        let tunnel = self
+            .state
+            .lock()
+            .unwrap()
+            .circuits
+            .get(&args.circ)
+            .ok_or_else(|| anyhow::anyhow!("Not a valid circuit"))?
+            .clone();
+
+        // We don't want to hold the lock while the listener is waiting for connections,
+        // since it would prevent us from performing other operations on the circuit.
+        // We clone the inner `Arc` here which means that if the circuit is "released",
+        // the circuit will remain open while the below loop is running.
+        let tunnel = tunnel.lock().await;
+        let tunnel = Arc::clone(&tunnel);
+
+        tokio::spawn(warn_on_error(async move {
+            circ_bind_loop(listener, tunnel, StreamType::Directory).await
+        }));
+
+        Ok(local_addr)
+    }
+
     async fn circ_release(
         self,
         _: Context,
@@ -442,6 +484,10 @@ async fn circ_bind_loop(
                     .begin_stream(&addr, port, None)
                     .await
                     .with_context(|| format!("Could not create a stream to '{addr}:{port}'"))?,
+                StreamType::Directory => tunnel
+                    .begin_dir_stream()
+                    .await
+                    .context("Could not create a directory stream")?,
             };
 
             loop {
@@ -460,6 +506,7 @@ async fn circ_bind_loop(
 #[derive(Clone, Debug)]
 enum StreamType {
     Network(String, u16),
+    Directory,
 }
 
 /// Log any error as a warning.

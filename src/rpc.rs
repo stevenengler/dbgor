@@ -28,6 +28,7 @@ pub trait Rpc {
     async fn circ_info(args: cli::CircInfoArgs) -> Result<CircInfo, RequestError>;
     async fn circ_resolve(args: cli::CircResolveArgs) -> Result<Vec<IpAddr>, RequestError>;
     async fn circ_bind(args: cli::CircBindArgs) -> Result<SocketAddr, RequestError>;
+    async fn circ_bind_dir(args: cli::CircBindDirArgs) -> Result<SocketAddr, RequestError>;
     async fn circ_release(args: cli::CircReleaseArgs) -> Result<(), RequestError>;
     async fn circ_list(
         args: cli::CircListArgs,

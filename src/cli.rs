@@ -55,6 +55,7 @@ const ALL_EXAMPLES: &str = formatcp! {"
 {CIRC_INFO_EXAMPLES}\
 {CIRC_RESOLVE_EXAMPLES}\
 {CIRC_BIND_EXAMPLES}\
+{CIRC_BIND_DIR_EXAMPLES}\
 {CIRC_RELEASE_EXAMPLES}\
 {CIRC_LIST_EXAMPLES}\
 "};
@@ -68,6 +69,7 @@ pub enum Commands {
     CircInfo(CircInfoArgs),
     CircResolve(CircResolveArgs),
     CircBind(CircBindArgs),
+    CircBindDir(CircBindDirArgs),
     CircRelease(CircReleaseArgs),
     #[clap(visible_alias = "circ-ls")]
     CircList(CircListArgs),
@@ -202,6 +204,32 @@ const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
   # Make an HTTP request to "example.com" over circuit "c1".
   {APP_NAME} {BOLD}circ-bind{RST} c1 127.0.0.1:9070 example.com 80
   curl --header 'Host: example.com' 127.0.0.1:9070 | less
+"#};
+
+/// Open a listening socket at which new connections will be forwarded
+/// to the relay's directory port.
+///
+/// Given a circuit ID and an address to listen at,
+/// any incoming connections at that address will result in a new directory stream on that circuit.
+/// Data will be proxied between that incoming connection and the stream.
+///
+/// Prints the local address of the listening socket.
+/// This is useful when you provide an address with a port of 0.
+///
+/// This command can be useful when an application does not support SOCKS or HTTP proxies.
+#[derive(Args, Debug, Clone, Serialize, Deserialize)]
+#[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_BIND_DIR_EXAMPLES}"))]
+pub struct CircBindDirArgs {
+    /// The ID of the circuit (ex: "c1").
+    pub circ: CircIdRef,
+    /// The address to listen at (ex: "127.0.0.1:9070").
+    pub addr: SocketAddr,
+}
+
+const CIRC_BIND_DIR_EXAMPLES: &str = formatcp! {r#"
+  # Download the latest consensus over circuit "c1".
+  {APP_NAME} {BOLD}circ-bind-dir{RST} c1 127.0.0.1:9070
+  curl 127.0.0.1:9070/tor/status-vote/current/consensus | less
 "#};
 
 /// Release an existing circuit.
