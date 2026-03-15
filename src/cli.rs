@@ -40,6 +40,7 @@ const CIRC_ID_PREFIX: &str = "c";
 #[command(version)]
 // We use a lot of subcommands, so don't need an extra "help" subcommand.
 #[clap(disable_help_subcommand = true)]
+#[clap(max_term_width(100))]
 #[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{ALL_EXAMPLES}"))]
 pub struct Cli {
     #[command(subcommand)]

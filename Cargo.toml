@@ -11,7 +11,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 anyhow = "1.0.102"
 base64ct = "1.8.3"
-clap = { version = "4.5.60", features = ["derive", "cargo"] }
+clap = { version = "4.5.60", features = ["derive", "cargo", "wrap_help"] }
 const_format = "0.2.35"
 either = "1.15.0"
 futures-util = "0.3.32"
