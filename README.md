@@ -7,8 +7,13 @@ and an RPC client to run commands on the Arti client.
 This is a work-in-progress and still has many rough edges.
 It was written for my own personal use,
 but maybe other people will find it useful.
+There are no stability guarantees between versions.
 Feel free to open issues for bugs or feature requests,
 but this is a personal project and is not actively maintained.
+
+This tool relies on Arti's experimental APIs.
+This means that it may become locked to an old Arti version in the future,
+in which case it will eventually become incompatible with the Tor network.
 
 ### Installation
 
@@ -19,16 +24,16 @@ from masquerading as this one while using the same name.
 It's recommended to build or install from the latest development version instead.
 
 ```bash
-# install the latest release from crates.io
-cargo install dbgor
-
 # install the latest development version
 git clone https://github.com/stevenengler/dbgor.git
 cargo install --path dbgor
+
+# install the latest release from crates.io
+cargo install dbgor
 ```
 
 [rust]: https://www.rust-lang.org/tools/install
-[crates-io]: https://crates.io/
+[crates-io]: https://crates.io/crates/dbgor
 
 ### Examples
 
