@@ -354,7 +354,7 @@ impl Rpc for Server {
         let tunnel = Arc::clone(&tunnel);
 
         tokio::spawn(warn_on_error(async move {
-            let dest = (args.dest_addr, args.dest_port);
+            let dest = StreamType::Network(args.dest_addr, args.dest_port);
             circ_bind_loop(listener, tunnel, dest).await
         }));
 
@@ -421,7 +421,7 @@ impl Rpc for Server {
 async fn circ_bind_loop(
     listener: TcpListener,
     tunnel: Arc<ClientTunnel>,
-    dest: (String, u16),
+    dest: StreamType,
 ) -> anyhow::Result<()> {
     // For log messages.
     let local_addr = listener.local_addr().unwrap();
@@ -437,10 +437,12 @@ async fn circ_bind_loop(
         let dest = dest.clone();
 
         tokio::spawn(warn_on_error(async move {
-            let mut stream = tunnel
-                .begin_stream(&dest.0, dest.1, None)
-                .await
-                .with_context(|| format!("Could not create a stream to '{}:{}'", dest.0, dest.1))?;
+            let mut stream = match dest {
+                StreamType::Network(addr, port) => tunnel
+                    .begin_stream(&addr, port, None)
+                    .await
+                    .with_context(|| format!("Could not create a stream to '{addr}:{port}'"))?,
+            };
 
             loop {
                 if let Err(e) = tokio::io::copy_bidirectional(&mut socket, &mut stream).await {
@@ -453,6 +455,11 @@ async fn circ_bind_loop(
             Ok(())
         }));
     }
+}
+
+#[derive(Clone, Debug)]
+enum StreamType {
+    Network(String, u16),
 }
 
 /// Log any error as a warning.
