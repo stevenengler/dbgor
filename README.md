@@ -25,8 +25,7 @@ It's recommended to build or install from the latest development version instead
 
 ```bash
 # install the latest development version
-git clone https://github.com/stevenengler/dbgor.git
-cargo install --path dbgor
+cargo install --git https://github.com/stevenengler/dbgor.git
 
 # install the latest release from crates.io
 cargo install dbgor
