@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -55,6 +55,7 @@ const ALL_EXAMPLES: &str = formatcp! {"
 {CIRC_EXTEND_EXAMPLES}\
 {CIRC_INFO_EXAMPLES}\
 {CIRC_RESOLVE_EXAMPLES}\
+{CIRC_RESOLVE_PTR_EXAMPLES}\
 {CIRC_BIND_EXAMPLES}\
 {CIRC_BIND_DIR_EXAMPLES}\
 {CIRC_RELEASE_EXAMPLES}\
@@ -69,6 +70,7 @@ pub enum Commands {
     CircExtend(CircExtendArgs),
     CircInfo(CircInfoArgs),
     CircResolve(CircResolveArgs),
+    CircResolvePtr(CircResolvePtrArgs),
     CircBind(CircBindArgs),
     CircBindDir(CircBindDirArgs),
     CircRelease(CircReleaseArgs),
@@ -176,6 +178,25 @@ pub struct CircResolveArgs {
 const CIRC_RESOLVE_EXAMPLES: &str = formatcp! {r#"
   {DIM}# Resolve hostname "torproject.org" by the last hop of circuit "c1".{RST}
   {APP_NAME} {BOLD}circ-resolve{RST} c1 torproject.org
+"#};
+
+/// Resolve an IP address to a hostname (reverse DNS lookup).
+///
+/// Note that the circuit must end at an exit relay.
+///
+/// The circuit ID must be the value given by a previous `circ-new` command.
+#[derive(Args, Debug, Clone, Serialize, Deserialize)]
+#[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_RESOLVE_PTR_EXAMPLES}"))]
+pub struct CircResolvePtrArgs {
+    /// The ID of the circuit (ex: "c1").
+    pub circ: CircIdRef,
+    /// The IP address to resolve (ex: "8.8.8.8").
+    pub addr: IpAddr,
+}
+
+const CIRC_RESOLVE_PTR_EXAMPLES: &str = formatcp! {r#"
+  {DIM}# Resolve an IP address to a hostname using the last hop of circuit "c1".{RST}
+  {APP_NAME} {BOLD}circ-resolve-ptr{RST} c1 8.8.8.8
 "#};
 
 /// Open a listening socket at which new connections will be forwarded along the circuit.

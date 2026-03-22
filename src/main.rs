@@ -115,6 +115,18 @@ async fn main() -> anyhow::Result<()> {
             let ips = serde_json::to_string_pretty(&ips)?;
             println!("{ips}");
         }
+        cli::Commands::CircResolvePtr(args) => {
+            let client = rpc::client_connect().await?;
+            let ctx = context_with_timeout(Duration::from_secs(60));
+
+            let hostnames = client
+                .circ_resolve_ptr(ctx, args.clone())
+                .await?
+                .map_err(anyhow::Error::msg)?;
+
+            let hostnames = serde_json::to_string_pretty(&hostnames)?;
+            println!("{hostnames}");
+        }
         cli::Commands::CircBind(args) => {
             let client = rpc::client_connect().await?;
             let ctx = context_with_timeout(Duration::from_secs(60));
@@ -338,6 +350,24 @@ impl Rpc for Server {
         let tunnel = tunnel.lock().await;
 
         Ok(tunnel.resolve(&args.hostname).await?)
+    }
+
+    async fn circ_resolve_ptr(
+        self,
+        _: Context,
+        args: crate::cli::CircResolvePtrArgs,
+    ) -> Result<Vec<String>, rpc::RequestError> {
+        let tunnel = self
+            .state
+            .lock()
+            .unwrap()
+            .circuits
+            .get(&args.circ)
+            .ok_or_else(|| anyhow::anyhow!("Not a valid circuit"))?
+            .clone();
+        let tunnel = tunnel.lock().await;
+
+        Ok(tunnel.resolve_ptr(args.addr).await?)
     }
 
     async fn circ_bind(
