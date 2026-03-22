@@ -33,7 +33,9 @@ const EXAMPLES_HEADING: &str = formatcp!("{BOLD_UNDERLINE}Examples:{RST}");
 /// The prefix for all circuit IDs.
 const CIRC_ID_PREFIX: &str = "c";
 
-/// Tool for manually building circuits.
+/// This is an interactive tool to help with debugging connectivity issues on the Tor network.
+/// It consists of an RPC server which runs an Arti Tor client,
+/// and an RPC client to run commands on the Arti client.
 ///
 /// Start the RPC server using the `server` command.
 /// All other commands act as RPC clients.
