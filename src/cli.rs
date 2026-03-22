@@ -189,6 +189,7 @@ const CIRC_RESOLVE_EXAMPLES: &str = formatcp! {r#"
 ///
 /// This command can be useful when an application does not support SOCKS or HTTP proxies.
 ///
+/// The listening socket will be opened in the namespace of the RPC server.
 /// The socket will stop listening when the circuit is closed.
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
 #[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_BIND_EXAMPLES}"))]
@@ -221,6 +222,7 @@ const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
 ///
 /// This command can be useful when an application does not support SOCKS or HTTP proxies.
 ///
+/// The listening socket will be opened in the namespace of the RPC server.
 /// The socket will stop listening when the circuit is closed.
 #[derive(Args, Debug, Clone, Serialize, Deserialize)]
 #[clap(after_long_help = formatcp!("{EXAMPLES_HEADING}{CIRC_BIND_DIR_EXAMPLES}"))]
