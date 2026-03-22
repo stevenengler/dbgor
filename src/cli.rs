@@ -21,6 +21,7 @@ use crate::circ::FirstHop;
 // ANSI
 const BOLD: &str = "\u{1b}[1m";
 const BOLD_UNDERLINE: &str = "\u{1b}[1;4m";
+const DIM: &str = "\u{1b}[2m";
 const RST: &str = "\u{1b}[0m";
 
 /// App name from Cargo.
@@ -48,7 +49,7 @@ pub struct Cli {
 }
 
 const ALL_EXAMPLES: &str = formatcp! {"
-  # Start the server.
+  {DIM}# Start the server.{RST}
   {APP_NAME} {BOLD}server{RST}
 {CIRC_NEW_EXAMPLES}\
 {CIRC_EXTEND_EXAMPLES}\
@@ -97,19 +98,19 @@ pub struct CircNewArgs {
 }
 
 const CIRC_NEW_EXAMPLES: &str = formatcp! {r#"
-  # Build a circuit with one hop to a relay with the nickname "foo".
+  {DIM}# Build a circuit with one hop to a relay with the nickname "foo".{RST}
   {APP_NAME} {BOLD}circ-new{RST} name:foo
 
-  # Build a circuit with multiple hops.
+  {DIM}# Build a circuit with multiple hops.{RST}
   {APP_NAME} {BOLD}circ-new{RST} name:foo addr:192.0.2.10:5001
 
-  # Build a circuit to the relay with the given RSA identity.
+  {DIM}# Build a circuit to the relay with the given RSA identity.{RST}
   {APP_NAME} {BOLD}circ-new{RST} rsa:4EBB385C80A2CA5D671E16F1C722FBFB5F176891
 
-  # Build a "CREATE_FAST" circuit to a relay which might not be in the consensus.
+  {DIM}# Build a "CREATE_FAST" circuit to a relay which might not be in the consensus.{RST}
   {APP_NAME} {BOLD}circ-new{RST} fast:192.0.2.20:443,rsa:0A9B1B207FD13A6F117F95CAFA358EEE2234F19A
 
-  # Build an "ntor" circuit to a relay which might not be in the consensus.
+  {DIM}# Build an "ntor" circuit to a relay which might not be in the consensus.{RST}
   {APP_NAME} {BOLD}circ-new{RST} \
     complete:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
 "#};
@@ -136,10 +137,10 @@ pub struct CircExtendArgs {
 }
 
 const CIRC_EXTEND_EXAMPLES: &str = formatcp! {r#"
-  # Extend circuit "c1" by one hop to a relay with the nickname "foo".
+  {DIM}# Extend circuit "c1" by one hop to a relay with the nickname "foo".{RST}
   {APP_NAME} {BOLD}circ-extend{RST} c1 name:foo
 
-  # Extend circuit "c1" by multiple hops.
+  {DIM}# Extend circuit "c1" by multiple hops.{RST}
   {APP_NAME} {BOLD}circ-extend{RST} c1 name:foo addr:192.0.2.10:5001
 "#};
 
@@ -154,7 +155,7 @@ pub struct CircInfoArgs {
 }
 
 const CIRC_INFO_EXAMPLES: &str = formatcp! {r#"
-  # Show information about circuit "c1".
+  {DIM}# Show information about circuit "c1".{RST}
   {APP_NAME} {BOLD}circ-info{RST} c1
 "#};
 
@@ -173,7 +174,7 @@ pub struct CircResolveArgs {
 }
 
 const CIRC_RESOLVE_EXAMPLES: &str = formatcp! {r#"
-  # Resolve hostname "torproject.org" by the last hop of circuit "c1".
+  {DIM}# Resolve hostname "torproject.org" by the last hop of circuit "c1".{RST}
   {APP_NAME} {BOLD}circ-resolve{RST} c1 torproject.org
 "#};
 
@@ -203,7 +204,7 @@ pub struct CircBindArgs {
 }
 
 const CIRC_BIND_EXAMPLES: &str = formatcp! {r#"
-  # Make an HTTP request to "example.com" over circuit "c1".
+  {DIM}# Make an HTTP request to "example.com" over circuit "c1".{RST}
   {APP_NAME} {BOLD}circ-bind{RST} c1 127.0.0.1:9070 example.com 80
   curl --header 'Host: example.com' 127.0.0.1:9070 | less
 "#};
@@ -231,7 +232,7 @@ pub struct CircBindDirArgs {
 }
 
 const CIRC_BIND_DIR_EXAMPLES: &str = formatcp! {r#"
-  # Download the latest consensus over circuit "c1".
+  {DIM}# Download the latest consensus over circuit "c1".{RST}
   {APP_NAME} {BOLD}circ-bind-dir{RST} c1 127.0.0.1:9070
   curl 127.0.0.1:9070/tor/status-vote/current/consensus | less
 "#};
@@ -257,10 +258,10 @@ pub struct CircReleaseArgs {
 }
 
 const CIRC_RELEASE_EXAMPLES: &str = formatcp! {r#"
-  # Release circuit "c1". The circuit will close once it's no longer being used.
+  {DIM}# Release circuit "c1". The circuit will close once it's no longer being used.{RST}
   {APP_NAME} {BOLD}circ-release{RST} c1
 
-  # Release circuit "c1" and terminate it. Active streams or commands using it will likely fail.
+  {DIM}# Release circuit "c1" and terminate it. Active streams or commands using it will likely fail.{RST}
   {APP_NAME} {BOLD}circ-release{RST} --close c1
 "#};
 
@@ -270,7 +271,7 @@ const CIRC_RELEASE_EXAMPLES: &str = formatcp! {r#"
 pub struct CircListArgs;
 
 const CIRC_LIST_EXAMPLES: &str = formatcp! {r#"
-  # List all circuits.
+  {DIM}# List all circuits.{RST}
   {APP_NAME} {BOLD}circ-list{RST}
 "#};
 
