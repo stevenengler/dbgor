@@ -4,6 +4,7 @@ mod rpc;
 mod util;
 
 use std::collections::HashMap;
+use std::env::VarError;
 use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -17,6 +18,7 @@ use tokio::net::TcpListener;
 use tor_linkspec::{ChanTarget, HasRelayIds, OwnedCircTarget, RelayIdType};
 use tor_proto::ClientTunnel;
 use tor_rtcompat::tokio::PreferredRuntime;
+use tracing_subscriber::EnvFilter;
 
 use crate::cli::CircId;
 use crate::rpc::Rpc;
@@ -36,10 +38,13 @@ async fn main() -> anyhow::Result<()> {
     match &cli.command {
         cli::Commands::Server => {
             let name = env!("CARGO_PKG_NAME").replace('-', "_");
-            let filter = tracing_subscriber::EnvFilter::builder()
-                .with_default_directive(format!("{name}=info").parse().unwrap())
-                .from_env()
-                .unwrap();
+            let filter = match std::env::var("RUST_LOG") {
+                Ok(env) => EnvFilter::builder().parse(env)?,
+                Err(VarError::NotPresent) => {
+                    EnvFilter::builder().parse(format!("warn,{name}=info"))?
+                }
+                Err(e @ VarError::NotUnicode(_)) => return Err(e.into()),
+            };
             let subscriber = tracing_subscriber::FmtSubscriber::builder()
                 .with_env_filter(filter)
                 .with_writer(std::io::stderr)
