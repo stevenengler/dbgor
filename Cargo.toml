@@ -30,12 +30,12 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # arti/tor dependencies
 
-arti-client = { version = "=0.40.0", features = ["experimental-api"] }
-tor-chanmgr = { version = "=0.40.0" }
-tor-circmgr = { version = "=0.40.0" }
-tor-linkspec = { version = "=0.40.0" }
-tor-llcrypto = { version = "=0.40.0" }
-tor-netdir = { version = "=0.40.0", features = ["experimental-api"] }
-tor-proto = { version = "=0.40.0" }
-tor-protover = { version = "=0.40.0" }
-tor-rtcompat = { version = "=0.40.0" }
+arti-client = { version = "=0.41.0", features = ["experimental-api"] }
+tor-chanmgr = { version = "=0.41.0" }
+tor-circmgr = { version = "=0.41.0" }
+tor-linkspec = { version = "=0.41.0" }
+tor-llcrypto = { version = "=0.41.0" }
+tor-netdir = { version = "=0.41.0", features = ["experimental-api"] }
+tor-proto = { version = "=0.41.0" }
+tor-protover = { version = "=0.41.0" }
+tor-rtcompat = { version = "=0.41.0" }
