@@ -432,7 +432,7 @@ impl TorTarget {
     }
 }
 
-/// Target for a `RELAY_FAST` circuit.
+/// Target for a `CREATE_FAST` circuit.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FastTarget {
     pub addr: SocketAddr,
