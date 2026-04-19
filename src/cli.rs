@@ -114,9 +114,9 @@ const CIRC_NEW_EXAMPLES: &str = formatcp! {r#"
   {DIM}# Build a "CREATE_FAST" circuit to a relay which might not be in the consensus.{RST}
   {APP_NAME} {BOLD}circ-new{RST} fast:192.0.2.20:443,rsa:0A9B1B207FD13A6F117F95CAFA358EEE2234F19A
 
-  {DIM}# Build an "ntor" circuit to a relay which might not be in the consensus.{RST}
+  {DIM}# Build a "CREATE2" circuit to a relay which might not be in the consensus.{RST}
   {APP_NAME} {BOLD}circ-new{RST} \
-    complete:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
+    create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
 "#};
 
 /// Extend a circuit.
@@ -382,7 +382,7 @@ impl FromStr for TorTarget {
             Ok(Self::Address(x.parse()?))
         } else if let Some(x) = s.strip_prefix("name:") {
             Ok(Self::Name(x.into()))
-        } else if let Some(x) = s.strip_prefix("complete:") {
+        } else if let Some(x) = s.strip_prefix("create2:") {
             Ok(Self::Create2(x.parse()?))
         } else if let Some(x) = s.strip_prefix("fast:") {
             Ok(Self::Fast(x.parse()?))

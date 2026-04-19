@@ -52,9 +52,9 @@ dbgor circ-new rsa:4EBB385C80A2CA5D671E16F1C722FBFB5F176891
 # Build a "CREATE_FAST" circuit to a relay which might not be in the consensus.
 dbgor circ-new fast:192.0.2.20:443,rsa:0A9B1B207FD13A6F117F95CAFA358EEE2234F19A
 
-# Build an "ntor" circuit to a relay which might not be in the consensus.
+# Build a "CREATE2" circuit to a relay which might not be in the consensus.
 dbgor circ-new \
-  complete:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
+  create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
 
 # Extend circuit "c1" by one hop to a relay with the nickname "foo".
 dbgor circ-extend c1 name:foo
