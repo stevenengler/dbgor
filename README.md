@@ -56,6 +56,10 @@ dbgor circ-new fast:192.0.2.20:443,rsa:0A9B1B207FD13A6F117F95CAFA358EEE2234F19A
 dbgor circ-new \
   create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
 
+# Build a "CREATE2" circuit to a relay, but overriding the set of required protocols.
+dbgor circ-new \
+  create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE,"Relay=2-3 FlowCtrl=1"
+
 # Extend circuit "c1" by one hop to a relay with the nickname "foo".
 dbgor circ-extend c1 name:foo
 

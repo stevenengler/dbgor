@@ -3,7 +3,7 @@ use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use anyhow::anyhow;
+use anyhow::{Context, anyhow};
 use base64ct::Encoding as _;
 use clap::{Args, Parser, Subcommand};
 use const_format::formatcp;
@@ -15,8 +15,9 @@ use tor_llcrypto::pk::curve25519::PublicKey as Curve25519PublicKey;
 use tor_llcrypto::pk::ed25519::Ed25519Identity;
 use tor_llcrypto::pk::rsa::RsaIdentity;
 use tor_netdir::NetDir;
+use tor_protover::Protocols;
 
-use crate::circ::FirstHop;
+use crate::circ::{Create2Hop, FirstHop, override_protocols, relay_required_protocol_status};
 
 // ANSI
 const BOLD: &str = "\u{1b}[1m";
@@ -117,6 +118,10 @@ const CIRC_NEW_EXAMPLES: &str = formatcp! {r#"
   {DIM}# Build a "CREATE2" circuit to a relay which might not be in the consensus.{RST}
   {APP_NAME} {BOLD}circ-new{RST} \
     create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE
+
+  {DIM}# Build a "CREATE2" circuit to a relay, but overriding the set of required protocols.{RST}
+  {APP_NAME} {BOLD}circ-new{RST} \
+    create2:192.0.2.30:9001,ed25519:qpL/LxLYVEXghU76iG3LsSI/UW7MBpIROZK0AB18560,QeRbF/o8G6udG72u/OJiSXW7eW6HzfYZpu8tQFyqVUE,"Relay=2-3 FlowCtrl=1"
 "#};
 
 /// Extend a circuit.
@@ -418,7 +423,22 @@ impl TorTarget {
                     .ok_or_else(|| anyhow!("No relay found with name {name}"))?;
                 Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(&relay)))
             }
-            Self::Create2(target) => Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(target))),
+            Self::Create2(target) => {
+                let required_protocols = relay_required_protocol_status(netdir);
+                let protocols =
+                    override_protocols(required_protocols.clone(), &target.protocol_overrides);
+
+                tracing::debug!("Consensus relay required protocols: {required_protocols}");
+                tracing::debug!("Using protocols:                    {protocols}");
+
+                let target = Create2Hop {
+                    target: OwnedChanTarget::from_chan_target(target),
+                    ntor: target.ntor.0,
+                    protocols,
+                };
+
+                Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(&target)))
+            }
             Self::Fast(target) => Ok(FirstHop::Fast(OwnedChanTarget::from_chan_target(target))),
         }
     }
@@ -488,13 +508,14 @@ impl tor_linkspec::HasChanMethod for FastTarget {
 
 impl tor_linkspec::ChanTarget for FastTarget {}
 
-/// Everything needed to build a circuit to the target relay; no consensus required.
+/// Target for a `CREATE2` circuit.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Create2Target {
     pub addr: SocketAddr,
     pub id: RelayId,
     pub ntor: NtorKey,
-    pub protocols: tor_protover::Protocols,
+    /// Protocols that will override the required relay protocols from the network status.
+    pub protocol_overrides: Protocols,
 }
 
 impl FromStr for Create2Target {
@@ -519,29 +540,25 @@ impl FromStr for Create2Target {
             .map_err(|_| anyhow::anyhow!("ntor not base64"))?;
         let ntor = NtorKey::from_bytes(&ntor).ok_or_else(|| anyhow::anyhow!("invalid ntor key"))?;
 
-        if parts.next().is_some() {
-            return Err(anyhow::anyhow!("unexpected part"));
-        }
+        // This last part is optional.
+        let protocol_overrides = if let Some(protocol_overrides) = parts.next() {
+            if parts.next().is_some() {
+                return Err(anyhow::anyhow!("unexpected part"));
+            }
 
-        // TODO: This wouldn't be easy to get on the cli.
-        // For example: "Conflux=1 Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1-2 HSDir=2 HSIntro=4-5
-        // HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-4"
-        //
-        // Instead, maybe allow passing in a microdescriptor filename.
-        //
-        // We could get 'required-relay-protocols' from the consensus, but we don't have access to
-        // that here.
-        let protocols = "Conflux=1 Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1-2 HSDir=2 \
-                         HSIntro=4-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 \
-                         Padding=2 Relay=1-4"
-            .parse()
-            .unwrap();
+            protocol_overrides
+                .parse()
+                .context("invalid protocol format")?
+        } else {
+            // Don't override any protocols.
+            Protocols::new()
+        };
 
         Ok(Self {
             addr,
             id,
             ntor,
-            protocols,
+            protocol_overrides,
         })
     }
 }
@@ -571,15 +588,6 @@ impl tor_linkspec::HasChanMethod for Create2Target {
 }
 
 impl tor_linkspec::ChanTarget for Create2Target {}
-
-impl tor_linkspec::CircTarget for Create2Target {
-    fn ntor_onion_key(&self) -> &tor_llcrypto::pk::curve25519::PublicKey {
-        &self.ntor.0
-    }
-    fn protovers(&self) -> &tor_protover::Protocols {
-        &self.protocols
-    }
-}
 
 /// An ntor key.
 // We don't actually store this anywhere, just use it for parsing.
