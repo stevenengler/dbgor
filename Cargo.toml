@@ -35,7 +35,7 @@ tor-chanmgr = { version = "=0.41.0" }
 tor-circmgr = { version = "=0.41.0" }
 tor-linkspec = { version = "=0.41.0" }
 tor-llcrypto = { version = "=0.41.0" }
-tor-netdir = { version = "=0.41.0", features = ["experimental-api"] }
+tor-netdir = { version = "=0.41.0", features = ["experimental-api", "hs-common"] }
 tor-proto = { version = "=0.41.0" }
 tor-protover = { version = "=0.41.0" }
 tor-rtcompat = { version = "=0.41.0" }
