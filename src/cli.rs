@@ -364,7 +364,7 @@ pub enum TorTarget {
     Id(RelayId),
     Address(SocketAddr),
     Name(String),
-    Complete(CompleteTarget),
+    Create2(Create2Target),
     Fast(FastTarget),
 }
 
@@ -383,7 +383,7 @@ impl FromStr for TorTarget {
         } else if let Some(x) = s.strip_prefix("name:") {
             Ok(Self::Name(x.into()))
         } else if let Some(x) = s.strip_prefix("complete:") {
-            Ok(Self::Complete(x.parse()?))
+            Ok(Self::Create2(x.parse()?))
         } else if let Some(x) = s.strip_prefix("fast:") {
             Ok(Self::Fast(x.parse()?))
         } else {
@@ -418,7 +418,7 @@ impl TorTarget {
                     .ok_or_else(|| anyhow!("No relay found with name {name}"))?;
                 Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(&relay)))
             }
-            Self::Complete(target) => Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(target))),
+            Self::Create2(target) => Ok(FirstHop::Ntor(OwnedCircTarget::from_circ_target(target))),
             Self::Fast(target) => Ok(FirstHop::Fast(OwnedChanTarget::from_chan_target(target))),
         }
     }
@@ -490,14 +490,14 @@ impl tor_linkspec::ChanTarget for FastTarget {}
 
 /// Everything needed to build a circuit to the target relay; no consensus required.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CompleteTarget {
+pub struct Create2Target {
     pub addr: SocketAddr,
     pub id: RelayId,
     pub ntor: NtorKey,
     pub protocols: tor_protover::Protocols,
 }
 
-impl FromStr for CompleteTarget {
+impl FromStr for Create2Target {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -546,13 +546,13 @@ impl FromStr for CompleteTarget {
     }
 }
 
-impl tor_linkspec::HasAddrs for CompleteTarget {
+impl tor_linkspec::HasAddrs for Create2Target {
     fn addrs(&self) -> impl Iterator<Item = SocketAddr> {
         [self.addr].into_iter()
     }
 }
 
-impl tor_linkspec::HasRelayIds for CompleteTarget {
+impl tor_linkspec::HasRelayIds for Create2Target {
     fn identity(
         &self,
         key_type: tor_linkspec::RelayIdType,
@@ -564,15 +564,15 @@ impl tor_linkspec::HasRelayIds for CompleteTarget {
     }
 }
 
-impl tor_linkspec::HasChanMethod for CompleteTarget {
+impl tor_linkspec::HasChanMethod for Create2Target {
     fn chan_method(&self) -> tor_linkspec::ChannelMethod {
         tor_linkspec::ChannelMethod::Direct(vec![self.addr])
     }
 }
 
-impl tor_linkspec::ChanTarget for CompleteTarget {}
+impl tor_linkspec::ChanTarget for Create2Target {}
 
-impl tor_linkspec::CircTarget for CompleteTarget {
+impl tor_linkspec::CircTarget for Create2Target {
     fn ntor_onion_key(&self) -> &tor_llcrypto::pk::curve25519::PublicKey {
         &self.ntor.0
     }
