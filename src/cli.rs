@@ -10,7 +10,9 @@ use const_format::formatcp;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
-use tor_linkspec::{CircTarget, HasAddrs, OwnedChanTarget, OwnedCircTarget, RelayId, RelayIdType};
+use tor_linkspec::{
+    CircTarget, HasAddrs, OwnedChanTarget, OwnedCircTarget, RelayId, RelayIdType, RelayIds,
+};
 use tor_llcrypto::pk::curve25519::PublicKey as Curve25519PublicKey;
 use tor_llcrypto::pk::ed25519::Ed25519Identity;
 use tor_llcrypto::pk::rsa::RsaIdentity;
@@ -512,7 +514,7 @@ impl tor_linkspec::ChanTarget for FastTarget {}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Create2Target {
     pub addr: SocketAddr,
-    pub id: RelayId,
+    pub ids: RelayIds,
     pub ntor: NtorKey,
     /// Protocols that will override the required relay protocols from the network status.
     pub protocol_overrides: Protocols,
@@ -529,9 +531,24 @@ impl FromStr for Create2Target {
             .ok_or_else(|| anyhow::anyhow!("missing address"))?;
         let addr = addr.parse()?;
 
-        let id = parts.next().ok_or_else(|| anyhow::anyhow!("missing id"))?;
-        let id: Identity = id.parse()?;
-        let id = id.0;
+        let mut ids_builder = RelayIds::builder();
+
+        // Allow multiple IDs, but split them by '.'.
+        // This isn't nice, but this whole parser is a mess so it's good enough for now.
+        let ids = parts.next().ok_or_else(|| anyhow::anyhow!("missing id"))?;
+        for id in ids.split('.') {
+            let id: Identity = id.parse()?;
+            let id = id.0;
+
+            match id {
+                RelayId::Ed25519(x) => ids_builder.ed_identity(x),
+                RelayId::Rsa(x) => ids_builder.rsa_identity(x),
+                // It's too bad we need to have a runtime failure rather than a compile failure.
+                _ => unimplemented!("unexpected `RelayId` variant"),
+            };
+        }
+
+        let ids = ids_builder.build().expect("couldn't build `RelayIds`");
 
         let ntor = parts
             .next()
@@ -556,7 +573,7 @@ impl FromStr for Create2Target {
 
         Ok(Self {
             addr,
-            id,
+            ids,
             ntor,
             protocol_overrides,
         })
@@ -574,10 +591,7 @@ impl tor_linkspec::HasRelayIds for Create2Target {
         &self,
         key_type: tor_linkspec::RelayIdType,
     ) -> Option<tor_linkspec::RelayIdRef<'_>> {
-        if key_type == self.id.id_type() {
-            return Some(self.id.as_ref());
-        }
-        None
+        self.ids.identity(key_type)
     }
 }
 
