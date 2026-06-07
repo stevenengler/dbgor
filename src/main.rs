@@ -182,7 +182,7 @@ async fn main() -> anyhow::Result<()> {
 
 #[derive(Clone)]
 struct Server {
-    tor_client: TorClient<PreferredRuntime>,
+    tor_client: Arc<TorClient<PreferredRuntime>>,
     state: Arc<Mutex<State>>,
 }
 
@@ -200,7 +200,7 @@ impl Rpc for Server {
     ) -> Result<CircId, rpc::RequestError> {
         let netdir = self
             .tor_client
-            .dirmgr()
+            .dirmgr()?
             .netdir(tor_netdir::Timeliness::Timely)?;
 
         fn pop_front<T>(vec: &mut Vec<T>) -> Option<T> {
@@ -236,8 +236,8 @@ impl Rpc for Server {
             .collect();
         tracing::debug!("Building circuit: {path_display:?}");
 
-        let chanmgr = self.tor_client.chanmgr();
-        let tunnel = crate::circ::new_tunnel(chanmgr, netdir.params(), first_hop).await?;
+        let chanmgr = self.tor_client.chanmgr()?;
+        let tunnel = crate::circ::new_tunnel(&chanmgr, netdir.params(), first_hop).await?;
 
         for relay in &remaining_path {
             crate::circ::extend_circ(tunnel.as_single_circ().unwrap(), relay, netdir.params())
@@ -260,7 +260,7 @@ impl Rpc for Server {
     ) -> Result<(), rpc::RequestError> {
         let netdir = self
             .tor_client
-            .dirmgr()
+            .dirmgr()?
             .netdir(tor_netdir::Timeliness::Timely)?;
 
         let relays: Vec<_> = args
@@ -297,7 +297,7 @@ impl Rpc for Server {
     ) -> Result<rpc::CircInfo, rpc::RequestError> {
         let netdir = self
             .tor_client
-            .dirmgr()
+            .dirmgr()?
             .netdir(tor_netdir::Timeliness::Timely)?;
 
         let tunnel = self
