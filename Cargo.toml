@@ -30,7 +30,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 # arti/tor dependencies
 
-arti-client = { version = "=0.45.0", features = ["experimental-api"] }
+arti-client = { version = "=0.45.0", features = ["experimental-api", "counter-galois-onion"] }
 tor-chanmgr = { version = "=0.45.0" }
 tor-circmgr = { version = "=0.45.0" }
 tor-linkspec = { version = "=0.45.0" }
