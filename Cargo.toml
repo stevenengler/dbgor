@@ -11,19 +11,19 @@ categories = ["command-line-utilities"]
 [dependencies]
 anyhow = "1.0.104"
 base64ct = "1.8.3"
-clap = { version = "4.6.5", features = ["derive", "cargo", "wrap_help"] }
+clap = { version = "4.6.7", features = ["derive", "cargo", "wrap_help"] }
 const_format = "0.2.36"
-either = "1.17.0"
-futures-util = "0.3.33"
+either = "1.18.0"
+futures-util = "0.3.34"
 hex = "0.4.3"
-itertools = "0.14.0"
+itertools = "0.15.0"
 libc = "0.2.189"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-serde_with = "3.21.0"
-tarpc = { version = "0.37.0", features = ["serde-transport-json", "tcp", "unix"] }
+serde_with = "3.24.0"
+tarpc = { version = "0.38.0", features = ["serde-transport-json", "tcp", "unix"] }
 tempfile = "3.27.0"
-thiserror = "2.0.19"
+thiserror = "2.0.21"
 tokio = { version = "1.53.1", features = ["rt", "macros", "net", "signal"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
